@@ -69,11 +69,12 @@ export function useSillyDream() {
 
       setModelDetectionStatus('loading');
       updateDebug('正在获取图片模型列表...');
+      console.log("Attempting fetch with Key:", key.substring(0, 10) + "...");
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/models`, {
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
         });
@@ -110,7 +111,7 @@ export function useSillyDream() {
         return [];
       }
     },
-    [API_BASE_URL]
+    [API_BASE_URL, apiKey]
   );
 
   useEffect(() => {
@@ -163,6 +164,7 @@ export function useSillyDream() {
 
       const modelDisplay = autoMode ? '自动最快' : selectedModel;
       updateDebug(`开始生成，模式: ${modelDisplay}`);
+      console.log("Attempting generate with Key:", apiKey.substring(0, 10) + "...");
 
       if (!validateApiKeyFormat()) {
         setGenerationStatus('error');
@@ -190,7 +192,7 @@ export function useSillyDream() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify(requestBody),
         });
