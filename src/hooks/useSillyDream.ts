@@ -69,12 +69,13 @@ export function useSillyDream() {
 
       setModelDetectionStatus('loading');
       updateDebug('正在获取图片模型列表...');
-      console.log("🚀 Requesting with Key:", apiKey.trim().substring(0, 10) + "...");
+      console.log("� Header Auth Only Mode Active");
+      console.log("�🚀 Requesting with Key:", key.trim().substring(0, 10) + "...");
 
       try {
         const response = await fetch(`${API_BASE_URL}/api/models`, {
           headers: {
-            Authorization: `Bearer ${apiKey.trim()}`,
+            Authorization: `Bearer ${key.trim()}`,
             'Content-Type': 'application/json',
           },
         });
@@ -111,17 +112,19 @@ export function useSillyDream() {
         return [];
       }
     },
-    [API_BASE_URL, apiKey]
+    [API_BASE_URL]
   );
 
   useEffect(() => {
-    if (apiKey && apiKey.length >= 10) {
-      fetchAvailableModels(apiKey);
+    const trimmedKey = apiKey.trim();
+    if (trimmedKey && trimmedKey.length >= 10) {
+      fetchAvailableModels(trimmedKey);
     }
   }, [apiKey, fetchAvailableModels]);
 
   const validateApiKeyFormat = useCallback((): boolean => {
-    if (!apiKey || apiKey.trim() === '') {
+    const trimmedKey = apiKey.trim();
+    if (!trimmedKey) {
       setApiKeyStatus('empty');
       return false;
     }
@@ -158,15 +161,17 @@ export function useSillyDream() {
 
   const generateImage = useCallback(
     async (params: GenerateParams): Promise<void> => {
+      const trimmedKey = apiKey.trim();
       setGenerationStatus('generating');
       setGenerationError(null);
       setGeneratedImage('');
 
       const modelDisplay = autoMode ? '自动最快' : selectedModel;
       updateDebug(`开始生成，模式: ${modelDisplay}`);
-      console.log("🚀 Requesting with Key:", apiKey.trim().substring(0, 10) + "...");
+      console.log("� Header Auth Only Mode Active");
+      console.log("�🚀 Requesting with Key:", trimmedKey.substring(0, 10) + "...");
 
-      if (!validateApiKeyFormat()) {
+      if (!trimmedKey) {
         setGenerationStatus('error');
         setGenerationError({
           title: 'API Key 未配置',
@@ -177,7 +182,7 @@ export function useSillyDream() {
 
       try {
         const requestBody = {
-          api_key: apiKey,
+          api_key: trimmedKey,
           image: params.image,
           prompt: params.prompt,
           denoising: params.denoising,
@@ -192,7 +197,7 @@ export function useSillyDream() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey.trim()}`,
+            Authorization: `Bearer ${trimmedKey}`,
           },
           body: JSON.stringify(requestBody),
         });
@@ -259,7 +264,7 @@ export function useSillyDream() {
         updateDebug(`网络错误: ${String(error)}`);
       }
     },
-    [apiKey, validateApiKeyFormat, autoMode, selectedModel, API_BASE_URL, fetchLatestImage]
+    [apiKey, autoMode, selectedModel, API_BASE_URL, fetchLatestImage]
   );
 
   const clearHistory = useCallback(() => {
@@ -267,8 +272,9 @@ export function useSillyDream() {
   }, []);
 
   const refreshModels = useCallback(async () => {
-    if (apiKey) {
-      await fetchAvailableModels(apiKey);
+    const trimmedKey = apiKey.trim();
+    if (trimmedKey) {
+      await fetchAvailableModels(trimmedKey);
     }
   }, [apiKey, fetchAvailableModels]);
 
