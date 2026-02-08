@@ -19,12 +19,17 @@ interface ExtendedModelInfo extends ModelInfo {
 }
 
 export function useSillyDream() {
-  const API_BASE_URL = 'http://localhost:3000';
-  const SILLY_DREAM_API = 'http://152.53.90.90:3000';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/proxy';
+  const SILLY_DREAM_API = import.meta.env.VITE_SILLY_DREAM_API || 'http://152.53.90.90:3000';
+
+  console.log("[API Config] VITE_API_BASE_URL:", API_BASE_URL);
+  console.log("[API Config] VITE_SILLY_DREAM_API:", SILLY_DREAM_API);
+  console.log("Current API Key exists:", !!import.meta.env.VITE_API_KEY);
+  console.log("Current API Key (first 10 chars):", import.meta.env.VITE_API_KEY ? import.meta.env.VITE_API_KEY.substring(0, 10) + '...' : 'NOT SET');
 
   const [apiKey, setApiKey] = useLocalStorageString(
     STORAGE_KEY_API_KEY,
-    ''
+    import.meta.env.VITE_API_KEY || ''
   );
 
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus>('idle');
@@ -68,7 +73,7 @@ export function useSillyDream() {
       try {
         const response = await fetch(`${API_BASE_URL}/api/models`, {
           headers: {
-            Authorization: `Bearer ${key}`,
+            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
             'Content-Type': 'application/json',
           },
         });
@@ -185,6 +190,7 @@ export function useSillyDream() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_API_KEY}`,
           },
           body: JSON.stringify(requestBody),
         });
