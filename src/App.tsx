@@ -1,4 +1,5 @@
-import { AlertCircle, Download, Sparkles, RotateCw, Trash2, ExternalLink } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { AlertCircle, Download, Sparkles, RotateCw, Settings, ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -6,14 +7,12 @@ import { Header } from '@/components/Header';
 import { ImageGalleryUploader } from '@/components/ImageGalleryUploader';
 import { ControlPanel } from '@/components/ControlPanel';
 import { ModelSelector } from '@/components/ModelSelector';
-import { Gallery, EmptyGallery } from '@/components/Gallery';
 import { SettingsModal } from '@/components/SettingsModal';
 import { GenerateButton } from '@/components/LoadingSpinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useState, useCallback, useEffect } from 'react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 interface ImageItem {
   id: string;
@@ -30,16 +29,6 @@ interface GenerationResult {
   modelUsed?: string;
 }
 
-interface HistoryItem {
-  id: string;
-  sourceImages: string[];
-  resultImages: string[];
-  prompt: string;
-  denoising: number;
-  seed?: number;
-  createdAt: number;
-}
-
 function App() {
   const [apiKey, setApiKey] = useState<string>(() => {
     try {
@@ -51,7 +40,6 @@ function App() {
 
   const [apiKeyStatus, setApiKeyStatus] = useState<'idle' | 'valid' | 'invalid' | 'empty'>('idle');
   const [generationError, setGenerationError] = useState<{ title: string; detail: string; code?: number } | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [autoMode, setAutoMode] = useState<boolean>(true);
@@ -68,6 +56,7 @@ function App() {
   const [generationResults, setGenerationResults] = useState<GenerationResult[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [is4KMode, setIs4KMode] = useState(true);
+  const [is4KActive, setIs4KActive] = useState(false);
 
   const saveApiKey = useCallback((key: string) => {
     setApiKey(key);
@@ -182,7 +171,7 @@ function App() {
       resultItem.error = error instanceof Error ? error.message : '网络请求失败';
       return resultItem;
     }
-  }, [apiKey, uploadedImages, prompt, denoising, seed, autoMode, selectedModel, is4KMode, promptWeight]);
+  }, [apiKey, uploadedImages, prompt, denoising, seed, autoMode, selectedModel]);
 
   const handleGenerate = useCallback(async () => {
     if (uploadedImages.length === 0 || !prompt.trim()) return;
@@ -219,14 +208,11 @@ function App() {
 
         const newHistoryItem: HistoryItem = {
           id: Date.now().toString(),
-          sourceImages: uploadedImages.map(img => img.dataUrl),
           resultImages: successResults.map(r => r.imageUrl),
           prompt: prompt.trim(),
           denoising,
           seed,
-          createdAt: Date.now(),
         };
-        setHistory(prev => [newHistoryItem, ...prev].slice(0, 50));
       }
 
       const failedCount = results.filter(r => r.status === 'error').length;
@@ -272,14 +258,10 @@ function App() {
     window.open(result.imageUrl, '_blank');
   }, []);
 
-  const handleClearResults = useCallback(() => {
-    setGenerationResults([]);
-    setGenerationError(null);
-  }, []);
-
   const is503Error = generationError?.code === 503;
   const isNoModelsAvailable = availableModels.length === 0 && modelDetectionStatus === 'error';
   const successCount = generationResults.filter(r => r.status === 'success').length;
+  const loadingCount = generationResults.filter(r => r.status === 'loading').length;
 
   return (
     <div className="min-h-screen gradient-bg">
@@ -289,7 +271,7 @@ function App() {
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <Card className="card-premium">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">上传参考图</CardTitle>
                 </CardHeader>
@@ -298,13 +280,13 @@ function App() {
                     images={uploadedImages}
                     onImagesChange={setUploadedImages}
                     disabled={isGenerating}
-                    maxImages={5}
+                    maxImages={10}
                     maxSizeMB={10}
                   />
                 </CardContent>
               </Card>
 
-              <Card className="card-premium">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">生成参数</CardTitle>
                 </CardHeader>
@@ -351,9 +333,11 @@ function App() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 张</SelectItem>
-                          <SelectItem value="2">2 张</SelectItem>
-                          <SelectItem value="4">4 张</SelectItem>
+                          {Array.from({ length: 10 }, (_, i) => (
+                            <SelectItem key={i + 1} value={(i + 1).toString()}>
+                              {i + 1} 张
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -423,7 +407,7 @@ function App() {
             </div>
 
             <div className="space-y-6">
-              <Card className="card-premium">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Sparkles className="h-5 w-5" />
@@ -439,8 +423,11 @@ function App() {
                   {generationResults.length > 0 ? (
                     <div className="space-y-4">
                       <div className="flex justify-end">
-                        <Button variant="ghost" size="sm" onClick={handleClearResults}>
-                          <Trash2 className="h-4 w-4 mr-2" />
+                        <Button variant="ghost" size="sm" onClick={() => {
+                          setGenerationResults([]);
+                          setGenerationError(null);
+                        }}>
+                          <X className="h-4 w-4 mr-2" />
                           清除结果
                         </Button>
                       </div>
@@ -532,15 +519,13 @@ function App() {
                 </CardContent>
               </Card>
 
-              <Card className="card-premium">
-                <CardContent className="pt-6">
-                  {history.length > 0 ? (
-                    <Gallery history={history} onClearHistory={() => setHistory([])} />
-                  ) : (
-                    <EmptyGallery />
-                  )}
-                </CardContent>
-              </Card>
+              <footer className="border-t bg-card/50 mt-12">
+                <div className="container mx-auto px-4 py-6">
+                  <p className="text-center text-sm text-muted-foreground">
+                    Powered by Gemini • 基于 Silly Dream API
+                  </p>
+                </div>
+              </footer>
             </div>
           </div>
         </div>

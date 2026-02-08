@@ -1,21 +1,10 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
 
-interface CollapsibleProps extends React.HTMLAttributes<HTMLDivElement> {
-  open?: boolean
-}
+const Collapsible = CollapsiblePrimitive.Root
 
-const Collapsible = React.forwardRef<HTMLDivElement, CollapsibleProps>(
-  ({ className, open, children, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn("relative overflow-hidden", className)}
-      {...props}
-    >
-      {children}
-    </div>
-  )
-)
-Collapsible.displayName = "Collapsible"
+const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
 
-export { Collapsible }
+const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
+
+export { Collapsible, CollapsibleTrigger, CollapsibleContent }

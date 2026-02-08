@@ -1,13 +1,7 @@
-import { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-interface ImageItem {
-  id: string;
-  dataUrl: string;
-  filename: string;
-}
 
 interface ImageUploaderProps {
   imageDataUrl?: string;
@@ -22,17 +16,20 @@ export function ImageUploader({
 }: ImageUploaderProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileName, setFileName] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileUpload = useCallback(
     (file: File) => {
+      setError(null);
+
       const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        alert('仅支持 PNG、JPG、WebP 格式');
+        setError('仅支持 PNG、JPG、WebP 格式');
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) {
-        alert('图片大小不能超过 10MB');
+        setError('图片大小不能超过 10MB');
         return;
       }
 
@@ -93,6 +90,7 @@ export function ImageUploader({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setFileName('');
+      setError(null);
       onImageChange(null);
     },
     [onImageChange]

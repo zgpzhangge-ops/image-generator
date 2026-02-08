@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 3%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 98%;
+    --background: 0 0% 98%;
+    --foreground: 220 20% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
     --primary: 270 70% 55%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 98%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 94%;
+    --secondary-foreground: 220 20% 25%;
+    --muted: 220 15% 96%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 220 15% 94%;
+    --accent-foreground: 220 20% 25%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
     --ring: 270 70% 55%;
     --radius: 0.75rem;
   }
@@ -44,46 +44,42 @@
 
 @layer components {
   .gradient-bg {
-    @apply bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950;
+    @apply bg-gradient-to-br from-white via-gray-50 to-gray-100;
     min-height: 100vh;
   }
 
   .card-premium {
-    @apply bg-card/80 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/50;
+    @apply bg-white border border-gray-100 shadow-lg shadow-gray-200/50;
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:border-white/10 hover:shadow-xl hover:shadow-purple-500/5;
+    @apply transition-all duration-300 hover:border-gray-200 hover:shadow-xl hover:shadow-gray-200/30;
   }
 
   .btn-primary {
     @apply bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 
-           text-white font-semibold shadow-lg shadow-purple-500/25 
-           transition-all duration-300 hover:shadow-purple-500/40 hover:scale-[1.02]
+           text-white font-semibold shadow-lg shadow-purple-500/20 
+           transition-all duration-300 hover:shadow-purple-500/30 hover:scale-[1.02]
            active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply bg-white/5 hover:bg-white/10 text-foreground border border-white/10
-           transition-all duration-300 hover:border-white/20;
+    @apply bg-white hover:bg-gray-50 text-gray-700 border border-gray-200
+           transition-all duration-300 hover:border-gray-300 hover:shadow-sm;
   }
 
   .input-premium {
-    @apply bg-white/5 border-white/10 text-foreground 
+    @apply bg-white border-gray-200 text-gray-900 
            focus:border-purple-500/50 focus:ring-purple-500/20
-           transition-all duration-300 placeholder:text-muted-foreground/50;
+           transition-all duration-300 placeholder:text-gray-400;
   }
 
   .text-gradient {
-    @apply bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent;
   }
 
   .glow-purple {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
-  }
-
-  .glow-blue {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.15), 0 0 40px rgba(168, 85, 247, 0.05);
   }
 
   .masonry-grid {
@@ -118,11 +114,11 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-white/20 rounded-full;
+    @apply bg-gray-300 rounded-full;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    @apply bg-white/30;
+    @apply bg-gray-400;
   }
 
   .animate-float {
@@ -149,7 +145,7 @@
   .shimmer::after {
     @apply absolute inset-0;
     content: '';
-    @apply bg-gradient-to-r from-transparent via-white/10 to-transparent;
+    @apply bg-gradient-to-r from-transparent via-white/50 to-transparent;
     transform: translateX(-100%);
     animation: shimmer 2s infinite;
   }

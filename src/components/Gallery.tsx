@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { History, Trash2, Download, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:3000';
 
 interface HistoryItem {
   id: string;
@@ -24,9 +19,15 @@ interface GalleryProps {
   onClearHistory: () => void;
 }
 
-function getImageUrl(filename: string): string {
-  const timestamp = Date.now();
-  return `${API_BASE_URL}/api/image/${encodeURIComponent(filename)}?t=${timestamp}`;
+function getImageUrl(urlOrFilename: string): string {
+  if (!urlOrFilename) return '';
+  
+  if (urlOrFilename.startsWith('http')) {
+    const separator = urlOrFilename.includes('?') ? '&' : '?';
+    return `${urlOrFilename}${separator}t=${Date.now()}`;
+  }
+  
+  return `${API_BASE_URL}/api/image/${encodeURIComponent(urlOrFilename)}?t=${Date.now()}`;
 }
 
 export function Gallery({ history, onClearHistory }: GalleryProps) {
@@ -54,7 +55,7 @@ export function Gallery({ history, onClearHistory }: GalleryProps) {
     window.open(imageUrl, '_blank');
   };
 
-  const truncatePrompt = (prompt: string, maxLength: number = 50): string => {
+  const truncatePrompt = (prompt: string, maxLength: number = 40): string => {
     if (prompt.length <= maxLength) return prompt;
     return prompt.substring(0, maxLength) + '...';
   };
@@ -73,6 +74,17 @@ export function Gallery({ history, onClearHistory }: GalleryProps) {
     );
   }
 
+  const allResults: Array<{ item: HistoryItem; resultIdx: number; imageUrl: string }> = [];
+  history.forEach((item, groupIndex) => {
+    item.resultImages.forEach((resultImg, resultIdx) => {
+      allResults.push({
+        item,
+        resultIdx,
+        imageUrl: getImageUrl(resultImg),
+      });
+    });
+  });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -80,7 +92,7 @@ export function Gallery({ history, onClearHistory }: GalleryProps) {
           <History className="h-5 w-5" />
           生成历史
           <span className="text-sm font-normal text-muted-foreground">
-            ({history.length})
+            ({allResults.length} 张)
           </span>
         </h2>
         <Button
@@ -94,55 +106,63 @@ export function Gallery({ history, onClearHistory }: GalleryProps) {
         </Button>
       </div>
 
-      <div className="masonry-grid">
-        {history.map((item, index) => (
-          <div key={item.id} className="masonry-item">
-            <Card className="overflow-hidden group hover:shadow-lg transition-shadow card-hover">
-              <div className="relative aspect-square bg-muted overflow-hidden">
-                {item.resultImages && item.resultImages.length > 0 && (
-                  <img
-                    src={getImageUrl(item.resultImages[0].split('/').pop() || '')}
-                    alt={`生成结果 ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    loading="lazy"
-                    onError={() => {
-                      console.error('历史图片加载失败');
-                    }}
-                  />
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleDownload(item.resultImages[0], index)}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleOpenNewTab(item.resultImages[0])}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </div>
+      <div className="grid grid-cols-2 gap-4">
+        {allResults.map((entry, index) => (
+          <div key={`${entry.item.id}-${entry.resultIdx}`} className="space-y-2">
+            <div className="relative rounded-xl overflow-hidden bg-muted cursor-pointer group">
+              <img
+                src={entry.imageUrl}
+                alt={`生成结果 ${index + 1}`}
+                className="w-full h-auto object-cover"
+                onError={(e) => {
+                  console.error('历史图片加载失败:', entry.imageUrl);
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+                onLoad={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'block';
+                }}
+                onClick={() => setSelectedImage(entry.imageUrl)}
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownload(entry.imageUrl, index);
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="h-9 w-9 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenNewTab(entry.imageUrl);
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
               </div>
-
-              <CardContent className="p-3">
-                <p className="text-sm line-clamp-2" title={item.prompt}>
-                  {truncatePrompt(item.prompt)}
-                </p>
-              </CardContent>
-
-              <CardFooter className="p-3 pt-0 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{formatTime(item.createdAt)}</span>
-                <span>D: {item.denoising.toFixed(2)}</span>
-              </CardFooter>
-            </Card>
+            </div>
+            <div className="px-1">
+              <p className="text-xs text-muted-foreground line-clamp-2" title={entry.item.prompt}>
+                {truncatePrompt(entry.item.prompt)}
+              </p>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(entry.item.createdAt)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  D:{entry.item.denoising.toFixed(1)}
+                </span>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -153,10 +173,10 @@ export function Gallery({ history, onClearHistory }: GalleryProps) {
           onClick={() => setSelectedImage(null)}
         >
           <img
-            src={`${selectedImage}&t=${Date.now()}`}
+            src={selectedImage}
             alt="预览"
             className="max-w-full max-h-[90vh] object-contain"
-            onError={() => {
+            onError={(e) => {
               console.error('预览图片加载失败:', selectedImage);
             }}
           />
