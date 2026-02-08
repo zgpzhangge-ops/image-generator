@@ -1,11 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "framework": null,
-  "buildCommand": "npx vite build",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "devCommand": "npx vite",
+  "devCommand": "npm run dev",
   "headers": [
     {
       "source": "/(.*)",
@@ -40,8 +38,12 @@
   ],
   "rewrites": [
     {
+      "source": "/api/proxy/:path*",
+      "destination": "https://wish.sillydream.top/:path*"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
-    }
+   }
   ]
 }
